@@ -1,54 +1,44 @@
-import React, { useState } from 'react'
-import PT from 'prop-types'
+import React, { useState } from 'react';
 
-const initialFormValues = {
-  username: '',
-  password: '',
-}
-export default function LoginForm(props) {
-  const [values, setValues] = useState(initialFormValues)
-  // ✨ where are my props? Destructure them here
+const initialFormValues = { username: '', password: '' };
+
+export default function LoginForm({ login }) {
+  const [values, setValues] = useState(initialFormValues);
 
   const onChange = evt => {
-    const { id, value } = evt.target
-    setValues({ ...values, [id]: value })
-  }
+    const { id, value } = evt.target;
+    setValues({ ...values, [id]: value });
+  };
 
   const onSubmit = evt => {
-    evt.preventDefault()
-    // ✨ implement
-  }
+    evt.preventDefault();
+    login(values);
+  };
 
   const isDisabled = () => {
-    // ✨ implement
-    // Trimmed username must be >= 3, and
-    // trimmed password must be >= 8 for
-    // the button to become enabled
-  }
+    const { username, password } = values;
+    return !(username.trim().length >= 3 && password.trim().length >= 8);
+  };
 
   return (
     <form id="loginForm" onSubmit={onSubmit}>
       <h2>Login</h2>
       <input
-        maxLength={20}
-        value={values.username}
         onChange={onChange}
+        value={values.username}
         placeholder="Enter username"
         id="username"
       />
       <input
-        maxLength={20}
-        value={values.password}
         onChange={onChange}
+        value={values.password}
         placeholder="Enter password"
         id="password"
+        type="password"
       />
-      <button disabled={isDisabled()} id="submitCredentials">Submit credentials</button>
+      <button data-testid="loginBtn" disabled={isDisabled()} id="submitCredentials">
+        Submit credentials
+      </button>
     </form>
-  )
-}
-
-// 🔥 No touchy: LoginForm expects the following props exactly:
-LoginForm.propTypes = {
-  login: PT.func.isRequired,
+  );
 }
