@@ -72,7 +72,12 @@ export default function App() {
         return res.json();
       })
       .then(data => {
-        setArticles(data);
+        if (Array.isArray(data)) {
+          setArticles(data);
+        } else {
+          setArticles([]);
+          setMessage('Failed to fetch articles');
+        }
         setSpinnerOn(false);
       })
       .catch((error) => {
@@ -114,6 +119,7 @@ export default function App() {
       headers: {
         'Content-Type': 'application/json',
         Authorization: localStorage.getItem('token'),
+
       },
       body: JSON.stringify(article),
     })
