@@ -37,7 +37,7 @@ export default function LoginForm({ login }) {
         type="password"
       />
       <button data-testid="loginBtn" disabled={isDisabled()} id="submitCredentials">
-        Submit credentials
+        Submit credentinteals
       </button>
     </form>
   );
