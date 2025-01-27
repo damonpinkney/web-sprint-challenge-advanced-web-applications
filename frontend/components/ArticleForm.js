@@ -35,10 +35,11 @@ export default function ArticleForm({
 
   const onSubmit = evt => {
     evt.preventDefault();
+    console.log('Submitting article:', { article_id: currentArticleId, article: values });
     if (currentArticleId) {
-      updateArticle({ article_id: currentArticleId, article: values });
+        updateArticle(currentArticleId, values); // Ensure the ID is passed correctly
     } else {
-      postArticle(values);
+        postArticle(values);
     }
     setValues(initialFormValues);
     setCurrentArticleId(null);
