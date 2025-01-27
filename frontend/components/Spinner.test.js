@@ -1,14 +1,13 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import '@testing-library/jest-dom'
-import Spinner from './Spinner';
+import React from "react"
+import { render } from "@testing-library/react"
+import "@testing-library/jest-dom"
 
-test('renders spinner when `on` prop is true', () => {
-  render(<Spinner on={true} />);
-  expect(screen.getByText(/please wait/i)).toBeInTheDocument();
-});
+import Spinner from "./Spinner"
 
-test('does not render spinner when `on` prop is false', () => {
-  render(<Spinner on={false} />);
-  expect(screen.queryByText(/please wait/i)).not.toBeInTheDocument();
-});
+test('Make sure the Spinner renders only when it is supposed to', () => {
+    const { rerender } = render(<Spinner on={true} />)
+    const spinner = document.querySelector('#spinner')
+    expect(spinner).toBeInTheDocument()
+    rerender(<Spinner on={false} />)
+    expect(spinner).not.toBeInTheDocument()
+})
