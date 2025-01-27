@@ -31,7 +31,7 @@ afterEach(() => {
 })
 
 const token = () => window.localStorage.getItem('token')
-const logoutBtn = () => screen.queryByText('Logout from app')
+const logoutBtn = () => screen.getByRole('button', { name: 'Logout from app' });
 // login screen
 const usernameInput = () => screen.queryByPlaceholderText('Enter username')
 const passwordInput = () => screen.queryByPlaceholderText('Enter password')
@@ -162,6 +162,7 @@ describe('Advanced Applications', () => {
       await loginFlow()
       // entering edit mode
       fireEvent.click(screen.getAllByText('Edit')[0])
+      screen.debug()
       expect(titleInput()).toHaveValue(st.closuresTitle)
       expect(textInput()).toHaveValue(st.closuresText)
       expect(topicSelect()).toHaveValue(st.closuresTopic)

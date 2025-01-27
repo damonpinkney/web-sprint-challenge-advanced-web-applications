@@ -1,185 +1,89 @@
-import React, { useState } from 'react'
-import { NavLink, Routes, Route, useNavigate } from 'react-router-dom'
-import Articles from './Articles'
-import LoginForm from './LoginForm'
-import Message from './Message'
-import ArticleForm from './ArticleForm'
-import Spinner from './Spinner'
-import axios from 'axios'
+import React, { useState, useEffect } from 'react';
 
-const articlesUrl = 'http://localhost:9000/api/articles'
-const loginUrl = 'http://localhost:9000/api/login'
+const initialFormValues = { title: '', text: '', topic: '' };
 
-export default function App() {
-    const [message, setMessage] = useState('')
-    const [articles, setArticles] = useState([])
-    const [currentArticleId, setCurrentArticleId] = useState()
-    const [spinnerOn, setSpinnerOn] = useState(false)
+export default function ArticleForm({
+  postArticle,
+  updateArticle,
+  currentArticleId,
+  setCurrentArticleId,
+  articles,
+}) {
+  const [values, setValues] = useState(initialFormValues);
 
-    const navigate = useNavigate()
-    const redirectToLogin = () => { navigate('/') }
-    const redirectToArticles = () => { navigate('articles') }
-
-    const logout = () => {
-        if (localStorage.getItem('token')) {
-            localStorage.removeItem('token')
-            setMessage("Goodbye!")
-        }
-        redirectToLogin()
+  useEffect(() => {
+    if (currentArticleId) {
+      const currentArticle = articles.find(
+        article => article.article_id === currentArticleId
+      );
+      if (currentArticle) {
+        setValues({
+          title: currentArticle.title,
+          text: currentArticle.text,
+          topic: currentArticle.topic,
+        });
+      }
+    } else {
+      setValues(initialFormValues);
     }
+  }, [currentArticleId, articles]);
 
-    const login = ({ username, password }) => {
-        setMessage('')
-        setSpinnerOn(true)
-        axios.post(loginUrl, { username, password })
-            .then(({ data: { message: servMsg, token } }) => {
-                localStorage.setItem('token', token)
-                setMessage(servMsg)
-                redirectToArticles()
-            })
-            .catch(err => {
-                setMessage("Something went wrong")
-                console.error(err)
-            })
-            .finally(() => setSpinnerOn(false))
+  const onChange = evt => {
+    const { id, value } = evt.target;
+    setValues({ ...values, [id]: value });
+  };
+
+  const onSubmit = evt => {
+    evt.preventDefault();
+    if (currentArticleId) {
+      updateArticle({ article_id: currentArticleId, article: values });
+    } else {
+      postArticle(values);
     }
+    setValues(initialFormValues);
+    setCurrentArticleId(null);
+  };
 
-    const getArticles = () => {
-        setMessage('')
-        setSpinnerOn(true)
-        const token = localStorage.getItem('token')
-        if (!token) {
-            redirectToLogin()
-        } else {
-            axios.get(articlesUrl,
-                { headers: { Authorization: token } }
-            )
-                .then(({ data: { message: servMsg, articles: servArticles } }) => {
-                    setMessage(servMsg)
-                    setArticles(servArticles)
-                })
-                .catch(err => {
-                    setMessage(err.response.data.message)
-                    console.error(err)
-                    if (err.status == 401) redirectToLogin()
-                })
-                .finally(() => setSpinnerOn(false))
-        }
-    }
+  const isDisabled = () => {
+    return !(values.title.trim() && values.text.trim() && values.topic.trim());
+  };
 
-    const postArticle = article => {
-        setMessage('')
-        setSpinnerOn(true)
-        const token = localStorage.getItem('token')
-        if (!token) {
-            redirectToLogin()
-        } else {
-            axios.post(articlesUrl,
-                article,
-                { headers: { Authorization: token } }
-            )
-                .then(({ data: { message: servMsg, article } }) => {
-                    setMessage(servMsg)
-                    setArticles([...articles, article])
-                })
-                .catch(err => {
-                    setMessage(err.response.data.message)
-                    console.error(err)
-                    if (err.status == 401) redirectToLogin()
-                })
-                .finally(() => setSpinnerOn(false))
-        }
-    }
-
-    const updateArticle = (article_id, article) => {
-        setMessage('')
-        setSpinnerOn(true)
-        const token = localStorage.getItem('token')
-        if (!token) {
-            redirectToLogin()
-        } else {
-            axios.put(`${articlesUrl}/${article_id}`,
-                article,
-                { headers: { Authorization: token } }
-            )
-                .then(({ data: { message: servMsg, article } }) => {
-                    setMessage(servMsg)
-                    const newArticles = articles.map(art => {
-                        if (art.article_id == article_id) {
-                            return { ...art, ...article }
-                        } else {
-                            return art
-                        }
-                    })
-                    setArticles(newArticles)
-                })
-                .catch(err => {
-                    setMessage(err.response.data.message)
-                    console.error(err)
-                    if (err.status == 401) redirectToLogin()
-                })
-                .finally(() => setSpinnerOn(false))
-        }
-    }
-
-    const deleteArticle = article_id => {
-        setMessage('')
-        setSpinnerOn(true)
-        const token = localStorage.getItem('token')
-        if (!token) {
-            redirectToLogin()
-        } else {
-            axios.delete(`${articlesUrl}/${article_id}`,
-                { headers: { Authorization: token } }
-            )
-                .then(({ data: { message: servMsg } }) => {
-                    setMessage(servMsg)
-                    const newArticles = articles.filter(art => art.article_id != article_id)
-                    setArticles(newArticles)
-                })
-                .catch(err => {
-                    setMessage(err.response.data.message)
-                    console.error(err)
-                    if (err.status == 401) redirectToLogin()
-                })
-                .finally(() => setSpinnerOn(false))
-        }
-    }
-
-    return (
-        <>
-            <Spinner on={spinnerOn} />
-            <Message message={message} />
-            <button id="logout" onClick={logout}>Logout from app</button>
-            <div id="wrapper" style={{ opacity: spinnerOn ? "0.25" : "1" }}> {/* <-- do not change this line */}
-                <h1>Advanced Web Applications</h1>
-                <nav>
-                    <NavLink id="loginScreen" to="/">Login</NavLink>
-                    <NavLink id="articlesScreen" to="/articles">Articles</NavLink>
-                </nav>
-                <Routes>
-                    <Route path="/" element={<LoginForm login={login} />} />
-                    <Route path="articles" element={
-                        <>
-                            <ArticleForm
-                                articles={articles}
-                                postArticle={postArticle}
-                                updateArticle={updateArticle}
-                                currentArticleId={currentArticleId}
-                                setCurrentArticleId={setCurrentArticleId}
-                            />
-                            <Articles
-                                articles={articles}
-                                getArticles={getArticles}
-                                deleteArticle={deleteArticle}
-                                currentArticleId={currentArticleId}
-                                setCurrentArticleId={setCurrentArticleId}
-                            />
-                        </>
-                    } />
-                </Routes>
-                <footer>Bloom Institute of Technology 2024</footer>
-            </div>
-        </>
-    )
+  return (
+    <form id="form" onSubmit={onSubmit}>
+      <h2>{currentArticleId ? 'Edit' : 'Create'} Article</h2>
+      <input
+        maxLength={50}
+        onChange={onChange}
+        value={values.title}
+        placeholder="Enter title"
+        id="title"
+      />
+      <textarea
+        maxLength={200}
+        onChange={onChange}
+        value={values.text}
+        placeholder="Enter text"
+        id="text"
+      />
+      <select onChange={onChange} value={values.topic} id="topic">
+        <option value="">-- Select topic --</option>
+        <option value="React">React</option>
+        <option value="JavaScript">JavaScript</option>
+        <option value="Node">Node</option>
+      </select>
+      <div className="button-group">
+        <button disabled={isDisabled()} id="submitArticle">
+          Submit
+        </button>
+        <button
+          onClick={() => {
+            setCurrentArticleId(null);
+            setValues(initialFormValues);
+          }}
+        >
+          Cancel edit
+        </button>
+      </div>
+    </form>
+  );
 }
